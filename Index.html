@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hannos Wörter-Abenteuer 🌟</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue: #3B82F6; --blue-d: #1D4ED8;
+  --green: #22C55E; --green-d: #15803D;
+  --orange: #F97316; --orange-d: #C2410C;
+  --purple: #A855F7; --purple-d: #7E22CE;
+  --yellow: #EAB308;
+  --red: #EF4444;
+  --bg: #F0F4FF;
+  --card: #fff;
+  --text: #1e293b;
+  --muted: #94a3b8;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  min-height: 100vh;
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+.bg-blobs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .18; animation: blobFloat 12s ease-in-out infinite alternate; }
+.blob1 { width:340px; height:340px; background:#a78bfa; top:-80px; left:-80px; animation-delay:0s; }
+.blob2 { width:260px; height:260px; background:#60a5fa; top:40%; right:-60px; animation-delay:-4s; }
+.blob3 { width:300px; height:300px; background:#34d399; bottom:-80px; left:30%; animation-delay:-8s; }
+@keyframes blobFloat { 0%{transform:translate(0,0) scale(1);} 100%{transform:translate(30px,20px) scale(1.08);} }
+
+header {
+  position: relative; z-index: 10;
+  background: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+  color: #fff; text-align: center;
+  padding: 20px 16px 16px;
+  border-radius: 0 0 28px 28px;
+  box-shadow: 0 6px 24px rgba(59,130,246,.35);
+}
+header h1 { font-family: 'Fredoka One', cursive; font-size: clamp(1.7rem,6vw,2.6rem); letter-spacing:1px; text-shadow:2px 3px 0 rgba(0,0,0,.15); }
+header .subtitle { font-size:.9rem; opacity:.88; margin-top:3px; }
+
+.progress-area { position: relative; z-index: 10; max-width: 680px; margin: 16px auto 0; padding: 0 16px; }
+.prog-row { display:flex; justify-content:space-between; font-weight:800; font-size:.88rem; color:#6366f1; margin-bottom:6px; }
+.bar-bg { height:16px; background:#e2e8f0; border-radius:20px; overflow:hidden; box-shadow:inset 0 2px 4px rgba(0,0,0,.08); }
+.bar-fill { height:100%; background:linear-gradient(90deg,#22c55e,#86efac); border-radius:20px; transition:width .6s cubic-bezier(.34,1.56,.64,1); position:relative; }
+.bar-fill::after { content:''; position:absolute; top:2px; left:6px; right:6px; height:5px; background:rgba(255,255,255,.45); border-radius:10px; }
+
+.stars-row { position:relative; z-index:10; text-align:center; margin:8px 0 4px; font-size:1.35rem; letter-spacing:2px; }
+.s-star { display:inline-block; transition:transform .2s; }
+.s-star.on { animation: popStar .4s cubic-bezier(.34,1.56,.64,1); }
+@keyframes popStar { 0%{transform:scale(0) rotate(-30deg);} 70%{transform:scale(1.25) rotate(4deg);} 100%{transform:scale(1);} }
+
+.streak-bar { position:relative; z-index:10; max-width:680px; margin:10px auto 0; padding:0 16px; }
+.streak-inner { background:linear-gradient(135deg,#F97316,#EAB308); border-radius:16px; padding:10px 18px; color:#fff; font-weight:800; font-size:.95rem; text-align:center; box-shadow:0 3px 14px rgba(249,115,22,.3); }
+
+.tabs { position:relative; z-index:10; display:flex; gap:8px; justify-content:center; max-width:680px; margin:14px auto 0; padding:0 16px; flex-wrap:wrap; }
+.tab-btn { padding:8px 18px; border:none; border-radius:20px; font-family:'Nunito',sans-serif; font-size:.9rem; font-weight:800; cursor:pointer; transition:all .22s; background:#fff; color:#94a3b8; box-shadow:0 2px 8px rgba(0,0,0,.09); }
+.tab-btn.active { color:#fff; transform:translateY(-2px); box-shadow:0 4px 14px rgba(0,0,0,.18); }
+.tab-btn[data-tab="lernen"].active    { background:linear-gradient(135deg,#3B82F6,#6366F1); }
+.tab-btn[data-tab="schreiben"].active { background:linear-gradient(135deg,#F97316,#EF4444); }
+.tab-btn[data-tab="liste"].active     { background:linear-gradient(135deg,#22C55E,#16A34A); }
+.tab-btn[data-tab="erfolge"].active   { background:linear-gradient(135deg,#EAB308,#F97316); }
+
+.content { position:relative; z-index:10; max-width:680px; margin:14px auto 0; padding:0 16px 50px; }
+.panel { display:none; }
+.panel.active { display:block; animation:slideUp .3s ease; }
+@keyframes slideUp { from{opacity:0;transform:translateY(14px);} to{opacity:1;transform:none;} }
+
+.card { background:#fff; border-radius:24px; overflow:hidden; box-shadow:0 6px 28px rgba(0,0,0,.09); }
+.card-stripe { height:7px; }
+.card-body { padding:28px 24px 24px; }
+
+/* LEARN */
+.learn-mode-label { font-size:.75rem; font-weight:800; letter-spacing:2px; text-transform:uppercase; color:#94a3b8; margin-bottom:10px; }
+.learn-cat-badge { display:inline-block; padding:4px 14px; border-radius:20px; font-size:.78rem; font-weight:800; letter-spacing:1px; text-transform:uppercase; background:#EEF2FF; color:#6366F1; margin-bottom:14px; }
+.learn-word-big { font-family:'Fredoka One',cursive; font-size:clamp(3rem,12vw,5.5rem); line-height:1.05; margin-bottom:8px; background:linear-gradient(135deg,#1D4ED8,#7C3AED); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.learn-tip { font-size:1rem; color:#64748b; margin-bottom:18px; min-height:24px; font-style:italic; }
+.syl-btn { display:inline-block; background:#EEF2FF; border:none; border-radius:12px; padding:7px 18px; font-family:'Nunito',sans-serif; font-size:.9rem; font-weight:700; color:#6366F1; cursor:pointer; margin-bottom:18px; transition:all .2s; }
+.syl-btn:hover { background:#E0E7FF; transform:scale(1.04); }
+.syl-show { font-family:'Fredoka One',cursive; font-size:1.6rem; color:#6366F1; letter-spacing:5px; margin-bottom:16px; animation:slideUp .25s; }
+
+.letter-boxes { display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-bottom:18px; }
+.lbox { width:44px; height:52px; background:#F8FAFC; border:2px solid #E2E8F0; border-radius:10px; display:flex; align-items:center; justify-content:center; font-family:'Fredoka One',cursive; font-size:1.6rem; color:#1D4ED8; }
+.lbox.space { background:transparent; border:none; width:16px; }
+
+.learn-btns { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+.btn { padding:11px 24px; border:none; border-radius:18px; font-family:'Nunito',sans-serif; font-size:.95rem; font-weight:800; cursor:pointer; transition:all .2s; box-shadow:0 3px 10px rgba(0,0,0,.12); }
+.btn:hover { transform:translateY(-2px); box-shadow:0 5px 16px rgba(0,0,0,.18); }
+.btn:active { transform:translateY(0); }
+.btn-prev  { background:#fff; color:#94a3b8; border:2px solid #e2e8f0; }
+.btn-next  { background:linear-gradient(135deg,#3B82F6,#6366F1); color:#fff; }
+.btn-known { background:linear-gradient(135deg,#22C55E,#16A34A); color:#fff; }
+.btn-hard  { background:linear-gradient(135deg,#F97316,#EF4444); color:#fff; }
+.word-counter { text-align:center; font-size:.8rem; color:#94a3b8; font-weight:700; margin-top:14px; }
+
+/* WRITE / QUIZ */
+.write-instruction { font-size:1rem; font-weight:700; color:#64748b; margin-bottom:10px; }
+
+/* HINT BOX — no word, only clue */
+.hint-box { background:linear-gradient(135deg,#FFF7ED,#FEF3C7); border:2px solid #FDE68A; border-radius:20px; padding:22px 20px; margin-bottom:18px; text-align:center; }
+.hint-emoji { font-size:4rem; margin-bottom:8px; display:block; line-height:1; }
+.hint-cat   { font-size:.78rem; font-weight:800; text-transform:uppercase; letter-spacing:1.5px; color:#92400E; margin-bottom:6px; }
+.hint-desc  { font-size:1.05rem; color:#78350F; font-weight:700; }
+
+.blank-line-wrap { margin-bottom:14px; }
+.blank-count-label { font-size:.82rem; color:#94a3b8; font-weight:700; margin-bottom:8px; text-align:center; }
+.blank-boxes { display:flex; gap:5px; justify-content:center; flex-wrap:wrap; }
+.blank-box { width:36px; height:44px; border-bottom:3px solid #CBD5E1; display:flex; align-items:flex-end; justify-content:center; padding-bottom:2px; font-size:1.4rem; color:transparent; }
+.blank-box.space { border:none; width:12px; }
+
+.hint-reveal-btn { background:#EEF2FF; border:none; border-radius:12px; padding:7px 16px; font-family:'Nunito',sans-serif; font-size:.85rem; font-weight:700; color:#6366F1; cursor:pointer; margin:0 auto 16px; display:block; transition:all .2s; }
+.hint-reveal-btn:hover { background:#E0E7FF; }
+
+.write-input-wrap { position:relative; max-width:360px; margin:0 auto 10px; }
+.write-input { width:100%; padding:14px 18px; text-align:center; font-family:'Fredoka One',cursive; font-size:2rem; border:3px solid #E2E8F0; border-radius:16px; outline:none; transition:all .2s; letter-spacing:3px; color:#1D4ED8; background:#F8FAFC; }
+.write-input:focus { border-color:#3B82F6; background:#fff; }
+.write-input.correct { border-color:#22C55E; background:#F0FDF4; }
+.write-input.wrong   { border-color:#EF4444; background:#FEF2F2; animation:shake .35s; }
+@keyframes shake { 0%,100%{transform:translateX(0);} 20%{transform:translateX(-9px);} 40%{transform:translateX(9px);} 60%{transform:translateX(-6px);} 80%{transform:translateX(4px);} }
+
+.write-feedback { min-height:28px; text-align:center; font-weight:800; font-size:1rem; margin-bottom:10px; }
+.write-feedback.ok  { color:#16A34A; }
+.write-feedback.err { color:#DC2626; }
+
+.mistake-detail { background:#FEF2F2; border:2px solid #FECACA; border-radius:16px; padding:14px 18px; margin-bottom:14px; display:none; text-align:center; }
+.mistake-label  { font-size:.78rem; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:#DC2626; margin-bottom:6px; }
+.mistake-correct { font-family:'Fredoka One',cursive; font-size:2rem; color:#1D4ED8; margin-bottom:8px; }
+.correction-row { font-size:.9rem; color:#64748b; margin-top:4px; }
+.cl { display:inline-block; font-family:'Fredoka One',cursive; font-size:1.1rem; }
+.cl.bad  { color:#EF4444; border-bottom:2px solid #EF4444; }
+.cl.good { color:#22C55E; }
+
+.quiz-score-row { display:flex; gap:10px; margin-bottom:16px; justify-content:center; }
+.score-pill { padding:8px 18px; border-radius:14px; font-weight:800; font-size:.9rem; }
+.score-right  { background:#DCFCE7; color:#15803D; }
+.score-wrong  { background:#FEE2E2; color:#B91C1C; }
+.score-streak { background:#FEF9C3; color:#854D0E; }
+
+.write-btns { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+.btn-check     { background:linear-gradient(135deg,#F97316,#EF4444); color:#fff; }
+.btn-skip      { background:#F1F5F9; color:#94a3b8; border:2px solid #E2E8F0; }
+.btn-next-quiz { background:linear-gradient(135deg,#22C55E,#16A34A); color:#fff; }
+
+/* LIST */
+.search-bar { width:100%; padding:10px 16px; font-family:'Nunito',sans-serif; font-size:1rem; border:2px solid #E2E8F0; border-radius:14px; outline:none; margin-bottom:12px; transition:border-color .2s; }
+.search-bar:focus { border-color:#3B82F6; }
+.filter-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+.filt-btn { padding:6px 14px; border:2px solid transparent; border-radius:12px; font-family:'Nunito',sans-serif; font-size:.82rem; font-weight:700; cursor:pointer; background:#fff; color:#94a3b8; transition:all .2s; box-shadow:0 1px 5px rgba(0,0,0,.07); }
+.filt-btn.active { background:#EEF2FF; border-color:#6366F1; color:#4338CA; }
+.word-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(125px,1fr)); gap:8px; }
+.wchip { background:#fff; border-radius:12px; padding:9px 12px; text-align:center; font-weight:700; font-size:.9rem; cursor:pointer; transition:all .2s; border:2px solid transparent; box-shadow:0 1px 6px rgba(0,0,0,.07); }
+.wchip:hover { transform:translateY(-2px); box-shadow:0 3px 12px rgba(0,0,0,.1); }
+.wchip.wknown { border-color:#22C55E; background:#F0FDF4; color:#15803D; }
+.wchip.whard  { border-color:#F97316; background:#FFF7ED; color:#C2410C; }
+.wi { font-size:.72rem; margin-right:3px; }
+.empty-msg { text-align:center; color:#cbd5e1; font-weight:700; padding:40px 0; font-size:1rem; }
+
+/* ACHIEVEMENTS */
+.ach-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(148px,1fr)); gap:12px; }
+.ach-card { background:#fff; border-radius:18px; padding:18px 12px; text-align:center; box-shadow:0 3px 14px rgba(0,0,0,.07); border:3px solid #E2E8F0; opacity:.4; filter:grayscale(60%); transition:all .3s; }
+.ach-card.unlocked { opacity:1; filter:none; border-color:#EAB308; box-shadow:0 4px 18px rgba(234,179,8,.3); }
+.ach-card.unlocked:hover { transform:translateY(-4px); }
+.ach-icon { font-size:2.4rem; margin-bottom:8px; }
+.ach-name { font-weight:800; font-size:.9rem; color:#1e293b; margin-bottom:3px; }
+.ach-desc { font-size:.75rem; color:#94a3b8; }
+
+#toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(80px); background:#1e293b; color:#fff; padding:12px 26px; border-radius:20px; font-weight:800; font-size:.95rem; z-index:9999; transition:transform .4s cubic-bezier(.34,1.56,.64,1); pointer-events:none; white-space:nowrap; }
+#toast.show { transform:translateX(-50%) translateY(0); }
+
+.conf { position:fixed; pointer-events:none; z-index:9998; border-radius:3px; animation:confFall 1.4s ease-in forwards; }
+@keyframes confFall { 0%{transform:translateY(0) rotate(0);opacity:1;} 100%{transform:translateY(100vh) rotate(540deg);opacity:0;} }
+
+.sec-title { font-family:'Fredoka One',cursive; font-size:1.3rem; color:#6366F1; margin-bottom:12px; }
+</style>
+</head>
+<body>
+
+<div class="bg-blobs">
+  <div class="blob blob1"></div><div class="blob blob2"></div><div class="blob blob3"></div>
+</div>
+
+<header>
+  <h1>🌟 Hannos Wörter-Abenteuer</h1>
+  <p class="subtitle">200 Wörter lernen – du schaffst das! 💪</p>
+</header>
+
+<div class="progress-area">
+  <div class="prog-row"><span id="progLabel">0 von 200 gelernt</span><span id="progPct">0 %</span></div>
+  <div class="bar-bg"><div class="bar-fill" id="progBar" style="width:0%"></div></div>
+</div>
+
+<div class="stars-row" id="starsRow"></div>
+
+<div class="streak-bar" id="streakBar" style="display:none">
+  <div class="streak-inner" id="streakInner"></div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="lernen">📖 Lernen</button>
+  <button class="tab-btn" data-tab="schreiben">✏️ Schreiben</button>
+  <button class="tab-btn" data-tab="liste">📋 Wörterliste</button>
+  <button class="tab-btn" data-tab="erfolge">🏆 Erfolge</button>
+</div>
+
+<div class="content">
+
+  <!-- LERNEN -->
+  <div class="panel active" id="panel-lernen">
+    <div class="card">
+      <div class="card-stripe" style="background:linear-gradient(90deg,#3B82F6,#8B5CF6,#EC4899)"></div>
+      <div class="card-body">
+        <div class="learn-mode-label">📖 Lernkarte – schau dir das Wort genau an!</div>
+        <div class="learn-cat-badge" id="lCat">–</div>
+        <div class="learn-word-big" id="lWord">–</div>
+        <div class="learn-tip" id="lTip"></div>
+        <div class="letter-boxes" id="lLetterBoxes"></div>
+        <button class="syl-btn" id="sylBtn" onclick="showSyl()">🔤 Silben anzeigen</button>
+        <div class="syl-show" id="sylShow" style="display:none"></div>
+        <div class="learn-btns">
+          <button class="btn btn-prev" onclick="learnNav(-1)">◀</button>
+          <button class="btn btn-hard" onclick="markWord(false)">😕 Noch schwer</button>
+          <button class="btn btn-known" onclick="markWord(true)">✅ Kann ich!</button>
+          <button class="btn btn-next" onclick="learnNav(1)">▶</button>
+        </div>
+        <div class="word-counter" id="lCounter"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCHREIBEN -->
+  <div class="panel" id="panel-schreiben">
+    <div class="card">
+      <div class="card-stripe" style="background:linear-gradient(90deg,#F97316,#EF4444,#EC4899)"></div>
+      <div class="card-body">
+        <div class="quiz-score-row">
+          <div class="score-pill score-right">✅ <span id="qRight">0</span> Richtig</div>
+          <div class="score-pill score-wrong">❌ <span id="qWrong">0</span> Falsch</div>
+          <div class="score-pill score-streak">🔥 <span id="qStreak">0</span> Serie</div>
+        </div>
+        <div class="write-instruction">Lies den Hinweis und schreibe das passende Wort!</div>
+        <div class="hint-box">
+          <span class="hint-emoji" id="hEmoji">🌟</span>
+          <div class="hint-cat" id="hCat">–</div>
+          <div class="hint-desc" id="hDesc">–</div>
+        </div>
+        <div class="blank-line-wrap">
+          <div class="blank-count-label" id="blankLabel"></div>
+          <div class="blank-boxes" id="blankBoxes"></div>
+        </div>
+        <button class="hint-reveal-btn" id="hintLetterBtn" onclick="revealFirstLetter()">💡 Ersten Buchstaben zeigen</button>
+        <div class="write-input-wrap">
+          <input class="write-input" id="writeInput" type="text"
+                 placeholder="Wort tippen…"
+                 onkeydown="if(event.key==='Enter') checkWrite()"
+                 autocomplete="off" spellcheck="false">
+        </div>
+        <div class="write-feedback" id="writeFeedback"></div>
+        <div class="mistake-detail" id="mistakeDetail">
+          <div class="mistake-label">Das richtige Wort ist:</div>
+          <div class="mistake-correct" id="mistakeCorrect"></div>
+          <div class="correction-row" id="corrRow"></div>
+        </div>
+        <div class="write-btns">
+          <button class="btn btn-skip" onclick="skipWrite()">Überspringen</button>
+          <button class="btn btn-check" id="checkBtn" onclick="checkWrite()">✔ Prüfen</button>
+          <button class="btn btn-next-quiz" id="nextBtn" style="display:none" onclick="nextWrite()">Nächstes Wort ▶</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LISTE -->
+  <div class="panel" id="panel-liste">
+    <p class="sec-title">📋 Alle 200 Wörter</p>
+    <input class="search-bar" id="searchBar" placeholder="🔍 Wort suchen…" oninput="renderList()">
+    <div class="filter-row">
+      <button class="filt-btn active" data-f="all"   onclick="setFilt(this,'all')">Alle</button>
+      <button class="filt-btn" data-f="known"        onclick="setFilt(this,'known')">✅ Kann ich</button>
+      <button class="filt-btn" data-f="hard"         onclick="setFilt(this,'hard')">😕 Schwer</button>
+      <button class="filt-btn" data-f="new"          onclick="setFilt(this,'new')">📖 Neu</button>
+    </div>
+    <div class="word-grid" id="wordGrid"></div>
+  </div>
+
+  <!-- ERFOLGE -->
+  <div class="panel" id="panel-erfolge">
+    <p class="sec-title">🏆 Hannos Erfolge</p>
+    <div class="ach-grid" id="achGrid"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const WORDS = [
+  {w:"Elefant",      cat:"Tiere",    syl:"E·le·fant",           e:"🐘", tip:"Das größte Landtier der Welt"},
+  {w:"Schmetterling",cat:"Tiere",    syl:"Schmet·ter·ling",     e:"🦋", tip:"Fliegt von Blume zu Blume"},
+  {w:"Frosch",       cat:"Tiere",    syl:"Frosch",              e:"🐸", tip:"Quakt im Teich"},
+  {w:"Eichhörnchen", cat:"Tiere",    syl:"Eich·hörn·chen",     e:"🐿", tip:"Sammelt Nüsse im Herbst"},
+  {w:"Storch",       cat:"Tiere",    syl:"Storch",              e:"🦢", tip:"Ein großer Zugvogel"},
+  {w:"Pinguin",      cat:"Tiere",    syl:"Pin·guin",            e:"🐧", tip:"Lebt im Eis und kann nicht fliegen"},
+  {w:"Delphin",      cat:"Tiere",    syl:"Del·phin",            e:"🐬", tip:"Ein sehr kluges Tier im Meer"},
+  {w:"Giraffe",      cat:"Tiere",    syl:"Gi·raf·fe",           e:"🦒", tip:"Hat einen langen Hals"},
+  {w:"Krokodil",     cat:"Tiere",    syl:"Kro·ko·dil",          e:"🐊", tip:"Lebt im Fluss und hat scharfe Zähne"},
+  {w:"Nashorn",      cat:"Tiere",    syl:"Nas·horn",            e:"🦏", tip:"Hat ein Horn auf der Nase"},
+  {w:"Regenbogen",   cat:"Natur",    syl:"Re·gen·bo·gen",       e:"🌈", tip:"Entsteht nach dem Regen am Himmel"},
+  {w:"Wolke",        cat:"Natur",    syl:"Wol·ke",              e:"☁️", tip:"Fliegt am Himmel"},
+  {w:"Blitz",        cat:"Natur",    syl:"Blitz",               e:"⚡", tip:"Leuchtet bei Gewitter"},
+  {w:"Frühling",     cat:"Natur",    syl:"Früh·ling",           e:"🌸", tip:"Jahreszeit nach dem Winter"},
+  {w:"Herbst",       cat:"Natur",    syl:"Herbst",              e:"🍂", tip:"Blätter fallen von den Bäumen"},
+  {w:"Wasserfall",   cat:"Natur",    syl:"Was·ser·fall",        e:"💧", tip:"Wasser stürzt in die Tiefe"},
+  {w:"Vulkan",       cat:"Natur",    syl:"Vul·kan",             e:"🌋", tip:"Speit Feuer und Lava"},
+  {w:"Gewitter",     cat:"Natur",    syl:"Ge·wit·ter",          e:"⛈",  tip:"Regen mit Blitz und Donner"},
+  {w:"Schnee",       cat:"Natur",    syl:"Schnee",              e:"❄️", tip:"Fällt im Winter vom Himmel"},
+  {w:"Tornado",      cat:"Natur",    syl:"Tor·na·do",           e:"🌪",  tip:"Ein wirbelnder Sturm"},
+  {w:"Großmutter",   cat:"Familie",  syl:"Groß·mut·ter",        e:"👵", tip:"Mama von Mama oder Papa"},
+  {w:"Großvater",    cat:"Familie",  syl:"Groß·va·ter",         e:"👴", tip:"Papa von Mama oder Papa"},
+  {w:"Geschwister",  cat:"Familie",  syl:"Ge·schwis·ter",       e:"👫", tip:"Bruder und Schwester zusammen"},
+  {w:"Freundschaft", cat:"Familie",  syl:"Freund·schaft",       e:"🤝", tip:"Wenn man gerne zusammen ist"},
+  {w:"Nachbar",      cat:"Familie",  syl:"Nach·bar",            e:"🏠", tip:"Wohnt nebenan"},
+  {w:"Arzt",         cat:"Familie",  syl:"Arzt",                e:"🩺", tip:"Hilft, wenn man krank ist"},
+  {w:"Bäcker",       cat:"Familie",  syl:"Bä·cker",             e:"🥖", tip:"Backt Brot und Brötchen"},
+  {w:"Feuerwehr",    cat:"Familie",  syl:"Feu·er·wehr",         e:"🚒", tip:"Löscht Brände"},
+  {w:"Polizist",     cat:"Familie",  syl:"Po·li·zist",          e:"👮", tip:"Sorgt für Sicherheit"},
+  {w:"Krankenschwester",cat:"Familie",syl:"Kran·ken·schwes·ter",e:"👩‍⚕️",tip:"Pflegt kranke Menschen"},
+  {w:"Schulranzen",  cat:"Schule",   syl:"Schul·ran·zen",       e:"🎒", tip:"Trägst du jeden Tag zur Schule"},
+  {w:"Bleistift",    cat:"Schule",   syl:"Blei·stift",          e:"✏️", tip:"Zum Schreiben und Zeichnen"},
+  {w:"Lineal",       cat:"Schule",   syl:"Li·ne·al",            e:"📏", tip:"Zum geraden Linienziehen"},
+  {w:"Bibliothek",   cat:"Schule",   syl:"Bib·lio·thek",        e:"📚", tip:"Dort gibt es viele Bücher"},
+  {w:"Hausaufgabe",  cat:"Schule",   syl:"Haus·auf·ga·be",      e:"📝", tip:"Aufgaben, die man zuhause macht"},
+  {w:"Pausenhof",    cat:"Schule",   syl:"Pau·sen·hof",         e:"🏃", tip:"Dort spielst du in der Pause"},
+  {w:"Stundenplan",  cat:"Schule",   syl:"Stun·den·plan",       e:"🗓",  tip:"Welches Fach ist wann?"},
+  {w:"Federmappe",   cat:"Schule",   syl:"Fe·der·map·pe",       e:"🖊",  tip:"Hält alle Stifte zusammen"},
+  {w:"Diktat",       cat:"Schule",   syl:"Dik·tat",             e:"✍️", tip:"Schreiben nach Gehör"},
+  {w:"Rechtschreibung",cat:"Schule", syl:"Recht·schrei·bung",   e:"🔤", tip:"Wörter richtig schreiben"},
+  {w:"Erdbeere",     cat:"Essen",    syl:"Erd·bee·re",          e:"🍓", tip:"Rote, leckere Frucht"},
+  {w:"Schokolade",   cat:"Essen",    syl:"Scho·ko·la·de",       e:"🍫", tip:"Süße braune Versuchung"},
+  {w:"Nudeln",       cat:"Essen",    syl:"Nu·deln",             e:"🍝", tip:"Lecker mit Tomatensoße"},
+  {w:"Brötchen",     cat:"Essen",    syl:"Bröt·chen",           e:"🥐", tip:"Kleines, rundes Brot"},
+  {w:"Pfannkuchen",  cat:"Essen",    syl:"Pfann·ku·chen",       e:"🥞", tip:"Flach und lecker aus der Pfanne"},
+  {w:"Gurke",        cat:"Essen",    syl:"Gur·ke",              e:"🥒", tip:"Grünes, langes Gemüse"},
+  {w:"Zwiebel",      cat:"Essen",    syl:"Zwie·bel",            e:"🧅", tip:"Bringt Tränen beim Schneiden"},
+  {w:"Karotte",      cat:"Essen",    syl:"Ka·rot·te",           e:"🥕", tip:"Orange und sehr gesund"},
+  {w:"Apfelsaft",    cat:"Essen",    syl:"Ap·fel·saft",         e:"🍎", tip:"Aus Äpfeln gepresst"},
+  {w:"Frühstück",    cat:"Essen",    syl:"Früh·stück",          e:"☀️", tip:"Erste Mahlzeit des Tages"},
+  {w:"Schlafzimmer", cat:"Zuhause",  syl:"Schlaf·zim·mer",      e:"🛏",  tip:"Dort schläfst du"},
+  {w:"Kühlschrank",  cat:"Zuhause",  syl:"Kühl·schrank",        e:"❄️", tip:"Hält Essen frisch"},
+  {w:"Treppe",       cat:"Zuhause",  syl:"Trep·pe",             e:"🪜", tip:"Führt nach oben"},
+  {w:"Fenster",      cat:"Zuhause",  syl:"Fens·ter",            e:"🪟", tip:"Lässt Licht ins Zimmer"},
+  {w:"Klingel",      cat:"Zuhause",  syl:"Klin·gel",            e:"🔔", tip:"Drückt man an der Haustür"},
+  {w:"Badewanne",    cat:"Zuhause",  syl:"Ba·de·wan·ne",        e:"🛁",  tip:"Dort badet man"},
+  {w:"Waschmaschine",cat:"Zuhause",  syl:"Wasch·ma·schi·ne",    e:"🌀", tip:"Wäscht Kleidung sauber"},
+  {w:"Gartenzaun",   cat:"Zuhause",  syl:"Gar·ten·zaun",        e:"🌿", tip:"Umzäunt den Garten"},
+  {w:"Wecker",       cat:"Zuhause",  syl:"We·cker",             e:"⏰", tip:"Weckt dich morgens"},
+  {w:"Briefkasten",  cat:"Zuhause",  syl:"Brief·kas·ten",       e:"📬", tip:"Dort kommt die Post rein"},
+  {w:"Fahrrad",      cat:"Verkehr",  syl:"Fahr·rad",            e:"🚲", tip:"Zwei Räder, kein Motor"},
+  {w:"Straßenbahn",  cat:"Verkehr",  syl:"Stra·ßen·bahn",       e:"🚃", tip:"Fährt auf Schienen durch die Stadt"},
+  {w:"Flugzeug",     cat:"Verkehr",  syl:"Flug·zeug",           e:"✈️", tip:"Fliegt hoch durch die Luft"},
+  {w:"Hubschrauber", cat:"Verkehr",  syl:"Hub·schrau·ber",      e:"🚁", tip:"Dreht sich nach oben"},
+  {w:"Ampel",        cat:"Verkehr",  syl:"Am·pel",              e:"🚦", tip:"Rot, Gelb, Grün"},
+  {w:"Zebrastreifen",cat:"Verkehr",  syl:"Ze·bra·strei·fen",    e:"🦓", tip:"Überquerung der Straße"},
+  {w:"Bahnhof",      cat:"Verkehr",  syl:"Bahn·hof",            e:"🚉", tip:"Züge fahren hier ab"},
+  {w:"Tankstelle",   cat:"Verkehr",  syl:"Tank·stel·le",        e:"⛽", tip:"Autos tanken hier"},
+  {w:"Reisepass",    cat:"Verkehr",  syl:"Rei·se·pass",         e:"🛂", tip:"Brauchst du im Ausland"},
+  {w:"Kreuzung",     cat:"Verkehr",  syl:"Kreu·zung",           e:"🛣",  tip:"Wo Straßen sich treffen"},
+  {w:"Fußball",      cat:"Sport",    syl:"Fuß·ball",            e:"⚽", tip:"Beliebteste Sportart"},
+  {w:"Turnhalle",    cat:"Sport",    syl:"Turn·hal·le",         e:"🤸", tip:"Dort turnt man in der Schule"},
+  {w:"Schwimmbad",   cat:"Sport",    syl:"Schwimm·bad",         e:"🏊", tip:"Plantschen und schwimmen"},
+  {w:"Rollschuh",    cat:"Sport",    syl:"Roll·schuh",          e:"🛼", tip:"Rollen unter dem Schuh"},
+  {w:"Springseil",   cat:"Sport",    syl:"Spring·seil",         e:"🪢", tip:"Zum Hüpfen und Springen"},
+  {w:"Tischtennis",  cat:"Sport",    syl:"Tisch·ten·nis",       e:"🏓", tip:"Kleiner Ball, kleiner Tisch"},
+  {w:"Torhüter",     cat:"Sport",    syl:"Tor·hü·ter",          e:"🧤", tip:"Hält die Tore beim Fußball"},
+  {w:"Schiedsrichter",cat:"Sport",   syl:"Schieds·rich·ter",    e:"🟨", tip:"Pfeift bei Fouls"},
+  {w:"Staffelstab",  cat:"Sport",    syl:"Staf·fel·stab",       e:"🏃", tip:"Beim Staffellauf weitergegeben"},
+  {w:"Drachen",      cat:"Sport",    syl:"Dra·chen",            e:"🪁", tip:"Steigt im Wind hoch"},
+  {w:"Weihnachten",  cat:"Feste",    syl:"Weih·nach·ten",       e:"🎄", tip:"Heiliger Abend – Geschenke!"},
+  {w:"Ostern",       cat:"Feste",    syl:"Os·tern",             e:"🐣", tip:"Eier suchen im Frühling"},
+  {w:"Geburtstag",   cat:"Feste",    syl:"Ge·burts·tag",        e:"🎂", tip:"Einmal im Jahr – dein Tag!"},
+  {w:"Silvester",    cat:"Feste",    syl:"Sil·ves·ter",         e:"🎆", tip:"Letzter Tag im Jahr"},
+  {w:"Karneval",     cat:"Feste",    syl:"Kar·ne·val",          e:"🎭", tip:"Kostüme und Konfetti"},
+  {w:"Laterne",      cat:"Feste",    syl:"La·ter·ne",           e:"🏮", tip:"Leuchtet beim Martinszug"},
+  {w:"Schneemann",   cat:"Feste",    syl:"Schnee·mann",         e:"⛄", tip:"Aus Schnee geformt"},
+  {w:"Nikolaus",     cat:"Feste",    syl:"Ni·ko·laus",          e:"🎅", tip:"Kommt am 6. Dezember"},
+  {w:"Feuerwerk",    cat:"Feste",    syl:"Feu·er·werk",         e:"🎇", tip:"Knallt und leuchtet am Himmel"},
+  {w:"Jahrmarkt",    cat:"Feste",    syl:"Jahr·markt",          e:"🎡", tip:"Bunte Buden und Fahrgeschäfte"},
+  {w:"Schulter",     cat:"Körper",   syl:"Schul·ter",           e:"💪", tip:"Verbindet Arm und Rumpf"},
+  {w:"Ellenbogen",   cat:"Körper",   syl:"El·len·bo·gen",       e:"💪", tip:"In der Mitte des Arms"},
+  {w:"Zahnbürste",   cat:"Körper",   syl:"Zahn·bürs·te",        e:"🪥", tip:"Putzt die Zähne zweimal täglich"},
+  {w:"Pflaster",     cat:"Körper",   syl:"Pflas·ter",           e:"🩹", tip:"Klebt auf Wunden"},
+  {w:"Erkältung",    cat:"Körper",   syl:"Er·käl·tung",         e:"🤧", tip:"Rotnase und Husten"},
+  {w:"Medikament",   cat:"Körper",   syl:"Me·di·ka·ment",       e:"💊", tip:"Macht krank wieder gesund"},
+  {w:"Kniescheibe",  cat:"Körper",   syl:"Knie·schei·be",       e:"🦵", tip:"Vorne am Knie"},
+  {w:"Fieber",       cat:"Körper",   syl:"Fie·ber",             e:"🌡",  tip:"Wenn du krank bist und heiß"},
+  {w:"Impfung",      cat:"Körper",   syl:"Imp·fung",            e:"💉", tip:"Schützt vor Krankheiten"},
+  {w:"Fingernagel",  cat:"Körper",   syl:"Fin·ger·na·gel",      e:"💅", tip:"Am Ende des Fingers"},
+  {w:"Regenjacke",   cat:"Kleidung", syl:"Re·gen·ja·cke",       e:"🧥", tip:"Schützt dich vor Regen"},
+  {w:"Handschuh",    cat:"Kleidung", syl:"Hand·schuh",          e:"🧤", tip:"Wärmt die Hände im Winter"},
+  {w:"Gummistiefel", cat:"Kleidung", syl:"Gum·mi·stie·fel",     e:"🥾", tip:"Für Matsch und Regen"},
+  {w:"Schlafanzug",  cat:"Kleidung", syl:"Schlaf·an·zug",       e:"😴", tip:"Zum Schlafen anziehen"},
+  {w:"Sonnenhut",    cat:"Kleidung", syl:"Son·nen·hut",         e:"👒", tip:"Schützt vor der Sonne"},
+  {w:"Reißverschluss",cat:"Kleidung",syl:"Reiß·ver·schluss",    e:"🔗", tip:"Öffnet und schließt die Jacke"},
+  {w:"Strumpfhose",  cat:"Kleidung", syl:"Strumpf·ho·se",       e:"🧦", tip:"Hose und Strümpfe in einem"},
+  {w:"Knopf",        cat:"Kleidung", syl:"Knopf",               e:"🔘", tip:"Hält die Jacke zusammen"},
+  {w:"Schal",        cat:"Kleidung", syl:"Schal",               e:"🧣", tip:"Wärmt den Hals"},
+  {w:"Mütze",        cat:"Kleidung", syl:"Müt·ze",              e:"🧢", tip:"Wärmt den Kopf im Winter"},
+  {w:"Computer",     cat:"Technik",  syl:"Com·pu·ter",          e:"💻", tip:"Zum Tippen und Spielen"},
+  {w:"Fernseher",    cat:"Technik",  syl:"Fern·se·her",         e:"📺", tip:"Zeigt Filme und Serien"},
+  {w:"Staubsauger",  cat:"Technik",  syl:"Staub·sau·ger",       e:"🌀", tip:"Saugt Staub und Schmutz auf"},
+  {w:"Taschenlampe", cat:"Technik",  syl:"Ta·schen·lam·pe",     e:"🔦", tip:"Leuchtet im Dunkeln"},
+  {w:"Schraubenzieher",cat:"Technik",syl:"Schrau·ben·zie·her",  e:"🔧", tip:"Dreht Schrauben fest"},
+  {w:"Kamera",       cat:"Technik",  syl:"Ka·me·ra",            e:"📷", tip:"Macht Fotos"},
+  {w:"Drucker",      cat:"Technik",  syl:"Dru·cker",            e:"🖨",  tip:"Druckt Seiten aus"},
+  {w:"Mikrofon",     cat:"Technik",  syl:"Mi·kro·fon",          e:"🎤", tip:"Nimmt die Stimme auf"},
+  {w:"Lautsprecher", cat:"Technik",  syl:"Laut·spre·cher",      e:"🔊", tip:"Macht Musik laut"},
+  {w:"Fernbedienung",cat:"Technik",  syl:"Fern·be·die·nung",    e:"📱", tip:"Steuert den Fernseher"},
+  {w:"obwohl",       cat:"Sprache",  syl:"ob·wohl",             e:"💬", tip:"Verbindungswort: obwohl es regnet…"},
+  {w:"deshalb",      cat:"Sprache",  syl:"des·halb",            e:"💭", tip:"Weil etwas so ist, deshalb…"},
+  {w:"nämlich",      cat:"Sprache",  syl:"näm·lich",            e:"💡", tip:"Erklärt genauer"},
+  {w:"plötzlich",    cat:"Sprache",  syl:"plötz·lich",          e:"⚡", tip:"Überraschend und schnell"},
+  {w:"gleichzeitig", cat:"Sprache",  syl:"gleich·zei·tig",      e:"⏱",  tip:"Zur selben Zeit"},
+  {w:"außerdem",     cat:"Sprache",  syl:"au·ßer·dem",          e:"📌", tip:"Noch dazu"},
+  {w:"tatsächlich",  cat:"Sprache",  syl:"tat·säch·lich",       e:"✔",  tip:"Wirklich wahr"},
+  {w:"regelmäßig",   cat:"Sprache",  syl:"re·gel·mä·ßig",       e:"🔄", tip:"Immer wieder"},
+  {w:"wahrscheinlich",cat:"Sprache", syl:"wahr·schein·lich",    e:"🤔", tip:"Fast sicher"},
+  {w:"selbstverständlich",cat:"Sprache",syl:"selbst·ver·ständ·lich",e:"😊",tip:"Natürlich klar"},
+  {w:"vierzig",      cat:"Zahlen",   syl:"vier·zig",            e:"🔢", tip:"10 × 4 = 40"},
+  {w:"siebenundzwanzig",cat:"Zahlen",syl:"sie·ben·und·zwan·zig",e:"🔢", tip:"20 + 7 = 27"},
+  {w:"hundert",      cat:"Zahlen",   syl:"hun·dert",            e:"💯", tip:"100 – 10 Zehner"},
+  {w:"Rechteck",     cat:"Zahlen",   syl:"Recht·eck",           e:"▭",  tip:"4 Ecken, 2 Paare gleich lang"},
+  {w:"Dreieck",      cat:"Zahlen",   syl:"Drei·eck",            e:"🔺", tip:"Hat genau 3 Ecken"},
+  {w:"Summe",        cat:"Zahlen",   syl:"Sum·me",              e:"➕", tip:"Ergebnis der Addition"},
+  {w:"Differenz",    cat:"Zahlen",   syl:"Dif·fe·renz",         e:"➖", tip:"Ergebnis der Subtraktion"},
+  {w:"Hälfte",       cat:"Zahlen",   syl:"Häl·fte",             e:"✂️", tip:"Geteilt durch 2"},
+  {w:"Tausend",      cat:"Zahlen",   syl:"Tau·send",            e:"🔢", tip:"1000 = zehn Hundert"},
+  {w:"Verdoppeln",   cat:"Zahlen",   syl:"ver·dop·peln",        e:"×2", tip:"Mal 2 nehmen"},
+  {w:"Ritter",       cat:"Märchen",  syl:"Rit·ter",             e:"⚔️", tip:"Kämpfer in Rüstung"},
+  {w:"Zauberer",     cat:"Märchen",  syl:"Zau·be·rer",          e:"🧙", tip:"Kann zaubern"},
+  {w:"Prinzessin",   cat:"Märchen",  syl:"Prin·zes·sin",        e:"👸", tip:"Tochter des Königs"},
+  {w:"Einhorn",      cat:"Märchen",  syl:"Ein·horn",            e:"🦄", tip:"Pferd mit einem Horn"},
+  {w:"Zauberstab",   cat:"Märchen",  syl:"Zau·ber·stab",        e:"🪄", tip:"Macht Wünsche wahr"},
+  {w:"Burggraben",   cat:"Märchen",  syl:"Burg·gra·ben",        e:"🏰", tip:"Wassergraben um die Burg"},
+  {w:"Zwerge",       cat:"Märchen",  syl:"Zwer·ge",             e:"⛏",  tip:"Kleine Wesen im Wald"},
+  {w:"Geheimnis",    cat:"Märchen",  syl:"Ge·heim·nis",         e:"🤫", tip:"Das weiß nicht jeder"},
+  {w:"Abenteuer",    cat:"Märchen",  syl:"A·ben·teu·er",        e:"🗺",  tip:"Aufregend und spannend"},
+  {w:"Drache",       cat:"Märchen",  syl:"Dra·che",             e:"🐉", tip:"Feuerspeiendes Fabelwesen"},
+  {w:"Sonnenblume",  cat:"Pflanzen", syl:"Son·nen·blu·me",      e:"🌻", tip:"Dreht sich zur Sonne"},
+  {w:"Pilz",         cat:"Pflanzen", syl:"Pilz",                e:"🍄", tip:"Wächst im Wald nach Regen"},
+  {w:"Gänseblümchen",cat:"Pflanzen", syl:"Gän·se·bläm·chen",    e:"🌼", tip:"Kleine weiße Blume auf der Wiese"},
+  {w:"Kastanie",     cat:"Pflanzen", syl:"Kas·ta·nie",          e:"🌰", tip:"Im Herbst sammelt man sie"},
+  {w:"Tannenbaum",   cat:"Pflanzen", syl:"Tan·nen·baum",        e:"🌲", tip:"Bleibt im Winter grün"},
+  {w:"Brennnessel",  cat:"Pflanzen", syl:"Brenn·nes·sel",       e:"🌿", tip:"Brennt bei Berührung"},
+  {w:"Hummel",       cat:"Pflanzen", syl:"Hum·mel",             e:"🐝", tip:"Bestäubt Blumen – größer als Biene"},
+  {w:"Libelle",      cat:"Pflanzen", syl:"Li·bel·le",           e:"🪲", tip:"Fliegt über Teichen und Seen"},
+  {w:"Regenwurm",    cat:"Pflanzen", syl:"Re·gen·wurm",         e:"🪱", tip:"Lebt im Boden"},
+  {w:"neugierig",    cat:"Gefühle",  syl:"neu·gie·rig",         e:"🔍", tip:"Möchte alles wissen und entdecken"},
+  {w:"aufgeregt",    cat:"Gefühle",  syl:"auf·ge·regt",         e:"😃", tip:"Freude und Spannung gemischt"},
+  {w:"traurig",      cat:"Gefühle",  syl:"trau·rig",            e:"😢", tip:"Wenn man weinen möchte"},
+  {w:"mutig",        cat:"Gefühle",  syl:"mu·tig",              e:"🦁", tip:"Hat keine Angst"},
+  {w:"erschöpft",    cat:"Gefühle",  syl:"er·schöpft",          e:"😴", tip:"Sehr, sehr müde"},
+  {w:"verlegen",     cat:"Gefühle",  syl:"ver·le·gen",          e:"😳", tip:"Rot im Gesicht werden"},
+  {w:"begeistert",   cat:"Gefühle",  syl:"be·geis·tert",        e:"🤩", tip:"Findet etwas super toll"},
+  {w:"überrascht",   cat:"Gefühle",  syl:"über·rascht",         e:"😮", tip:"Das hat man nicht erwartet!"},
+  {w:"zufrieden",    cat:"Gefühle",  syl:"zu·frie·den",         e:"😊", tip:"Alles ist gut so wie es ist"},
+  {w:"eifersüchtig", cat:"Gefühle",  syl:"ei·fer·süch·tig",     e:"😒", tip:"Möchte auch haben was ein anderer hat"},
+  {w:"Abendessen",   cat:"Essen",    syl:"A·bend·es·sen",       e:"🍽",  tip:"Mahlzeit am Abend"},
+  {w:"Mittagessen",  cat:"Essen",    syl:"Mit·tag·es·sen",      e:"🥗", tip:"Mahlzeit um die Mittagszeit"},
+  {w:"Suppenteller", cat:"Essen",    syl:"Sup·pen·tel·ler",     e:"🥣", tip:"Tiefer Teller für Suppe"},
+  {w:"Schutzengel",  cat:"Märchen",  syl:"Schutz·en·gel",       e:"👼", tip:"Passt unsichtbar auf dich auf"},
+  {w:"Zaubertrank",  cat:"Märchen",  syl:"Zau·ber·trank",       e:"🧪", tip:"Hat besondere Zauberkräfte"},
+  {w:"Erdkunde",     cat:"Schule",   syl:"Erd·kun·de",          e:"🌍", tip:"Lerne die Welt kennen"},
+  {w:"Sachunterricht",cat:"Schule",  syl:"Sach·un·ter·richt",   e:"🔬", tip:"Lernen über Natur und Alltag"},
+  {w:"Kunstunterricht",cat:"Schule", syl:"Kunst·un·ter·richt",  e:"🎨", tip:"Malen und Basteln in der Schule"},
+  {w:"Musikunterricht",cat:"Schule", syl:"Mu·sik·un·ter·richt", e:"🎵", tip:"Singen und Musik in der Schule"},
+  {w:"Klassenzimmer",cat:"Schule",   syl:"Klas·sen·zim·mer",    e:"🏫", tip:"Dort lernst du jeden Tag"},
+];
+
+let S = {
+  learnIdx: 0, known: {},
+  quizOrder: [], quizIdx: 0,
+  qRight: 0, qWrong: 0, qStreak: 0,
+  answered: false, firstLetterUsed: false,
+  streakDays: 0, lastDay: null,
+  achievements: new Set(),
+  _noHintCount: 0,
+};
+
+const ACHIEVEMENTS = [
+  {id:'first',   icon:'🌱', name:'Erster Schritt!',   desc:'Erstes Wort richtig geschrieben',        chk: s => s.qRight >= 1},
+  {id:'ten',     icon:'🔥', name:'10 Richtig!',        desc:'10 Wörter richtig geschrieben',          chk: s => s.qRight >= 10},
+  {id:'fifty',   icon:'⭐', name:'50 Richtig!',        desc:'50 Wörter richtig geschrieben',          chk: s => s.qRight >= 50},
+  {id:'k10',     icon:'📖', name:'10 Gelernt!',        desc:'10 Wörter auf Lernkarte gemeistert',     chk: s => Object.values(s.known).filter(Boolean).length >= 10},
+  {id:'k50',     icon:'🏅', name:'50 Gelernt!',        desc:'50 Wörter auf Lernkarte gemeistert',     chk: s => Object.values(s.known).filter(Boolean).length >= 50},
+  {id:'k100',    icon:'💎', name:'Halb geschafft!',    desc:'100 Wörter gemeistert',                  chk: s => Object.values(s.known).filter(Boolean).length >= 100},
+  {id:'kall',    icon:'🏆', name:'Wörter-Champion!!',  desc:'ALLE 200 Wörter gelernt – WOW!!',        chk: s => Object.values(s.known).filter(Boolean).length >= 200},
+  {id:'streak3', icon:'🌟', name:'3 Tage dabei!',      desc:'3 Tage in Folge geübt',                 chk: s => s.streakDays >= 3},
+  {id:'streak7', icon:'🔥', name:'1 Woche stark!',     desc:'7 Tage in Folge geübt',                 chk: s => s.streakDays >= 7},
+  {id:'nohint',  icon:'🧠', name:'Ohne Hilfe!',        desc:'5 Wörter ohne Tipp-Hilfe geschrieben',   chk: s => s._noHintCount >= 5},
+];
+
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem('hanno_v4') || 'null');
+    if (!d) return;
+    Object.assign(S, d);
+    S.achievements = new Set(d.achievements || []);
+  } catch(e){}
+}
+function save() {
+  try { localStorage.setItem('hanno_v4', JSON.stringify({...S, achievements:[...S.achievements]})); } catch(e){}
+}
+
+function init() {
+  load();
+  const today = new Date().toDateString();
+  if (S.lastDay) {
+    const diff = Math.round((new Date(today)-new Date(S.lastDay))/86400000);
+    if (diff===1) S.streakDays++;
+    else if (diff>1) S.streakDays=1;
+  } else S.streakDays=1;
+  S.lastDay=today; save();
+
+  if (S.streakDays>=2) {
+    document.getElementById('streakBar').style.display='';
+    document.getElementById('streakInner').textContent=`🔥 ${S.streakDays} Tage in Folge – super Hanno!`;
+  }
+  renderLearn(); initQuiz(); renderList(); renderAchievements(); updateProg(); renderStars();
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn=>btn.addEventListener('click',()=>{
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+  if(btn.dataset.tab==='schreiben') initQuiz();
+  if(btn.dataset.tab==='liste') renderList();
+  if(btn.dataset.tab==='erfolge') renderAchievements();
+}));
+
+function updateProg() {
+  const k=Object.values(S.known).filter(Boolean).length;
+  const p=Math.round(k/WORDS.length*100);
+  document.getElementById('progBar').style.width=p+'%';
+  document.getElementById('progLabel').textContent=`${k} von ${WORDS.length} gelernt`;
+  document.getElementById('progPct').textContent=p+'%';
+}
+function renderStars(){
+  const k=Object.values(S.known).filter(Boolean).length;
+  const on=Math.floor(k/10);
+  document.getElementById('starsRow').innerHTML=
+    Array.from({length:20},(_,i)=>`<span class="s-star${i<on?' on':''}">${i<on?'⭐':'☆'}</span>`).join('');
+}
+
+/* LEARN */
+function renderLearn(){
+  const w=WORDS[S.learnIdx];
+  document.getElementById('lCat').textContent=w.cat;
+  document.getElementById('lWord').textContent=w.w;
+  document.getElementById('lTip').textContent=w.tip;
+  document.getElementById('sylShow').style.display='none';
+  document.getElementById('sylBtn').style.display='';
+  document.getElementById('lCounter').textContent=`Karte ${S.learnIdx+1} von ${WORDS.length}`;
+  const boxes=document.getElementById('lLetterBoxes');
+  boxes.innerHTML='';
+  for(const ch of w.w){
+    const d=document.createElement('div');
+    d.className=ch===' '?'lbox space':'lbox';
+    if(ch!==' ') d.textContent=ch;
+    boxes.appendChild(d);
+  }
+}
+function learnNav(dir){ S.learnIdx=(S.learnIdx+dir+WORDS.length)%WORDS.length; renderLearn(); }
+function showSyl(){
+  const w=WORDS[S.learnIdx];
+  document.getElementById('sylShow').textContent=w.syl;
+  document.getElementById('sylShow').style.display='';
+  document.getElementById('sylBtn').style.display='none';
+}
+function markWord(known){
+  S.known[S.learnIdx]=known; save(); updateProg(); renderStars(); checkAch();
+  if(known){confetti(8); showToast('Super! ✅');} else showToast('Weiter üben – du schaffst das! 💪');
+  learnNav(1);
+}
+
+/* WRITE */
+function initQuiz(){
+  S.quizOrder=[...Array(WORDS.length).keys()].sort(()=>Math.random()-.5);
+  S.quizIdx=0;
+  document.getElementById('qRight').textContent=S.qRight;
+  document.getElementById('qWrong').textContent=S.qWrong;
+  document.getElementById('qStreak').textContent=S.qStreak;
+  showQuizWord();
+}
+
+function showQuizWord(){
+  if(S.quizIdx>=S.quizOrder.length){
+    S.quizOrder=[...Array(WORDS.length).keys()].sort(()=>Math.random()-.5);
+    S.quizIdx=0;
+  }
+  const w=WORDS[S.quizOrder[S.quizIdx]];
+  S.answered=false; S.firstLetterUsed=false;
+
+  // hint — NO word shown!
+  document.getElementById('hEmoji').textContent=w.e;
+  document.getElementById('hCat').textContent=w.cat;
+  document.getElementById('hDesc').textContent=w.tip;
+
+  // blank boxes (just count, no letters)
+  document.getElementById('blankLabel').textContent=
+    `Das Wort hat ${w.w.length} Buchstabe${w.w.length!==1?'n':''}${w.w.includes(' ')?' (mit Leerzeichen)':''}`;
+  const bb=document.getElementById('blankBoxes');
+  bb.innerHTML='';
+  for(const ch of w.w){
+    const d=document.createElement('div');
+    d.className=ch===' '?'blank-box space':'blank-box';
+    bb.appendChild(d);
+  }
+
+  const inp=document.getElementById('writeInput');
+  inp.value=''; inp.className='write-input'; inp.disabled=false; inp.focus();
+  document.getElementById('writeFeedback').textContent='';
+  document.getElementById('writeFeedback').className='write-feedback';
+  document.getElementById('mistakeDetail').style.display='none';
+  document.getElementById('hintLetterBtn').style.display='';
+  document.getElementById('checkBtn').style.display='';
+  document.getElementById('nextBtn').style.display='none';
+}
+
+function revealFirstLetter(){
+  const w=WORDS[S.quizOrder[S.quizIdx]];
+  const inp=document.getElementById('writeInput');
+  inp.value=w.w[0]; inp.focus();
+  document.getElementById('hintLetterBtn').style.display='none';
+  S.firstLetterUsed=true;
+}
+
+function checkWrite(){
+  if(S.answered) return;
+  const w=WORDS[S.quizOrder[S.quizIdx]];
+  const inp=document.getElementById('writeInput');
+  const val=inp.value.trim();
+  if(!val) return;
+  S.answered=true; inp.disabled=true;
+  const ok=w.w.toLowerCase()===val.toLowerCase();
+  const fb=document.getElementById('writeFeedback');
+
+  if(ok){
+    inp.className='write-input correct';
+    fb.className='write-feedback ok';
+    fb.textContent=randomPraise();
+    S.qRight++; S.qStreak++;
+    if(!S.firstLetterUsed) S._noHintCount=(S._noHintCount||0)+1;
+    confetti(12);
+  } else {
+    inp.className='write-input wrong';
+    fb.className='write-feedback err';
+    fb.textContent='😕 Fast! Das richtige Wort siehst du unten:';
+    S.qStreak=0; S.qWrong++;
+    const det=document.getElementById('mistakeDetail');
+    det.style.display='';
+    document.getElementById('mistakeCorrect').textContent=w.w;
+    // char-by-char diff
+    const row=document.getElementById('corrRow');
+    let html='Dein Wort: ';
+    for(let i=0;i<Math.max(val.length,w.w.length);i++){
+      const a=val[i]||'', b=w.w[i]||'';
+      if(a) html+=`<span class="cl ${a.toLowerCase()===b.toLowerCase()?'good':'bad'}">${a}</span>`;
+    }
+    row.innerHTML=html;
+  }
+
+  document.getElementById('qRight').textContent=S.qRight;
+  document.getElementById('qWrong').textContent=S.qWrong;
+  document.getElementById('qStreak').textContent=S.qStreak;
+  document.getElementById('hintLetterBtn').style.display='none';
+  document.getElementById('checkBtn').style.display='none';
+  document.getElementById('nextBtn').style.display='';
+  save(); checkAch();
+}
+
+function skipWrite(){ S.quizIdx++; S.qStreak=0; document.getElementById('qStreak').textContent=0; showQuizWord(); }
+function nextWrite(){ S.quizIdx++; showQuizWord(); }
+
+const PRAISES=['🎉 Perfekt!','🌟 Super, Hanno!','✨ Klasse!','🔥 Richtig toll!','💪 Du bist ein Profi!','⭐ Ausgezeichnet!','🎊 Wunderbar!','🏆 Mega gut!','😄 Weiter so!','🥳 Bravo Hanno!'];
+function randomPraise(){ return PRAISES[Math.floor(Math.random()*PRAISES.length)]; }
+
+/* LIST */
+let activeFilter='all';
+function setFilt(btn,f){ document.querySelectorAll('.filt-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); activeFilter=f; renderList(); }
+function renderList(){
+  const q=(document.getElementById('searchBar')?.value||'').toLowerCase();
+  let html='';
+  WORDS.forEach((w,i)=>{
+    const ik=S.known[i]===true, ih=S.known[i]===false;
+    if(activeFilter==='known'&&!ik) return;
+    if(activeFilter==='hard'&&!ih) return;
+    if(activeFilter==='new'&&S.known[i]!==undefined) return;
+    if(q&&!w.w.toLowerCase().includes(q)) return;
+    const cls=ik?'wknown':ih?'whard':'';
+    const ico=ik?'✅':ih?'😕':'📖';
+    html+=`<div class="wchip ${cls}" onclick="jumpLearn(${i})"><span class="wi">${ico}</span>${w.w}</div>`;
+  });
+  document.getElementById('wordGrid').innerHTML=html||'<div class="empty-msg">Keine Wörter gefunden 😅</div>';
+}
+function jumpLearn(i){
+  S.learnIdx=i;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelector('[data-tab="lernen"]').classList.add('active');
+  document.getElementById('panel-lernen').classList.add('active');
+  renderLearn();
+}
+
+/* ACHIEVEMENTS */
+function checkAch(){
+  ACHIEVEMENTS.forEach(a=>{
+    if(!S.achievements.has(a.id)&&a.chk(S)){
+      S.achievements.add(a.id); save();
+      showToast(`🏆 Erfolg: ${a.name}`); confetti(22); renderAchievements();
+    }
+  });
+}
+function renderAchievements(){
+  document.getElementById('achGrid').innerHTML=ACHIEVEMENTS.map(a=>{
+    const u=S.achievements.has(a.id);
+    return `<div class="ach-card${u?' unlocked':''}"><div class="ach-icon">${a.icon}</div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div></div>`;
+  }).join('');
+}
+
+/* CONFETTI */
+function confetti(n=10){
+  const cols=['#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#FF922B','#CC5DE8','#FF6BD6'];
+  for(let i=0;i<n;i++){
+    const el=document.createElement('div');
+    el.className='conf';
+    el.style.cssText=`left:${Math.random()*100}vw;top:0;background:${cols[~~(Math.random()*cols.length)]};width:${6+Math.random()*10}px;height:${6+Math.random()*10}px;border-radius:${Math.random()>.5?'50%':'3px'};animation-delay:${Math.random()*.5}s;animation-duration:${.9+Math.random()*1}s;`;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),2200);
+  }
+}
+
+/* TOAST */
+let tt;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+init();
+</script>
+</body>
+</html>
